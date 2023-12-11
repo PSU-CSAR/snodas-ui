@@ -46,8 +46,10 @@ function getSNODASdates(callback) {
     });
 }
 
-var map, featureList, snodas_dates, selected_properties;
+var map, snodas_dates, selected_properties;
 var date_range_low, date_range_high, doy_start, doy_end, doy_date;
+const awdbIdList = [];
+
 
 function fmtDate(date, sep) {
     if (!date) {
@@ -230,7 +232,8 @@ query_selector.onclick = function(event) {
     query_selector.select_query_by_element(event.target);
 }
 
-var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody><tr><th scope="row">AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr></tbody></table>';
+var awdb_select = '<tr><td><select name="awdb-select" id="awdb-select"></select></td></tr>'
+var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody><tr><th scope="row">AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr>' + awdb_select +'</tbody></table>';
 var date_html = 'Query Date Range<div class="input-group input-daterange mb-3" id="snodas-range-query-date"><input type="text" class="input-sm form-control" id="snodas-range-query-start" name="start"><div class="input-group-prepend input-group-append"><div class="input-group-text">to</div></div><input type="text" class="input-sm form-control" id="snodas-range-query-end" name="end"></div>';
 var doy_html = 'Query Date<div id="snodas-doy-query"><div class="input-group input-daterange mb-3" id="snodas-doy-query-doy"><input type="text" class="input-sm form-control" id="snodas-doy-query-doy1" name="start"></div><select class="form-control" id="snodas-doy-query-years-start"></select>to<select class="form-control" id="snodas-doy-query-years-end"></select></div>';
 var variables_html = 'SNODAS Variable:<select class="form-control" id="snodas-query-variable"><option value="depth">Snow Depth</option><option value="swe" selected>Snow Water Equivalent</option><option value="runoff">Runoff</option><option value="sublimation">Sublimation</option><option value="sublimation_blowing">Sublimation (Blowing)</option><option value="precip_solid">Precipitation (Solid)</option><option value="precip_liquid">Precipitation (Liquid)</option><option value="average_temp">Average Temperature</option></select>';
@@ -238,6 +241,30 @@ var regression = 'Forecast period:<select class="form-control" id="snodas-query-
 var submit = '<a url="https://api.snodas.geog.pdx.edu/" role="button" class="btn btn-success disabled" id="snodas-query-btn" aria-disabled="true">Submit Query</a>';
 
 function pp_table_init() {
+    var x = document.getElementById("awdb-select");
+    if (x.options.length == 0)
+    {
+        awdbIdList.sort(function(x, y) {
+            const xPieces = x.split(":");
+            const yPieces = y.split(":");
+            var xTest = xPieces[1].concat(xPieces[0]);
+            var yTest = yPieces[1].concat(yPieces[0]);
+         if (xTest < yTest) {
+            return -1;
+         }
+         if (xTest > yTest) {
+            return 1;
+         }
+         return 0;
+      });
+        var i = 0;
+        while (i < awdbIdList.length) {
+            var option = document.createElement("option");
+            option.text = awdbIdList[i];
+            x.add(option);
+            i++;
+        }
+    }
     if (selected_properties) {
         setPourpointName(selected_properties);
     }
@@ -952,6 +979,7 @@ var pourpoints = L.geoJson(null, {
                     L.DomEvent.stop(e);
                 }
             });
+            awdbIdList.push(feature.properties.awdb_id);
         }
     }
 });
@@ -1154,7 +1182,6 @@ var layerControl = L.control.groupedLayers(
 // once loading is done:
 //   - hide the loading spinner
 //   - put the layer control where it needs to be
-//   - populate the featureList var for the sidebar
 $(document).one("ajaxStop", function() {
     $("#loading").hide();
     sizeLayerControl();
