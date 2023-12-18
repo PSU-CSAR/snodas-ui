@@ -48,7 +48,7 @@ function getSNODASdates(callback) {
 
 var map, snodas_dates, selected_properties;
 var date_range_low, date_range_high, doy_start, doy_end, doy_date;
-const awdbIdList = [];
+const featuresPropertiesList = [];
 
 
 function fmtDate(date, sep) {
@@ -232,8 +232,8 @@ query_selector.onclick = function(event) {
     query_selector.select_query_by_element(event.target);
 }
 
-var awdb_select = '<tr><td><select name="awdb-select" id="awdb-select"></select></td></tr>'
-var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody><tr><th scope="row">AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr>' + awdb_select +'</tbody></table>';
+var awdb_select = '<tr><th scope="row" colSpan="2"><select name="awdb-select" id="awdb-select"></select></th></tr>'
+var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody>' + awdb_select + '<tr><th scope="row" class="pourpoint-table" >AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr></tbody></table>';
 var date_html = 'Query Date Range<div class="input-group input-daterange mb-3" id="snodas-range-query-date"><input type="text" class="input-sm form-control" id="snodas-range-query-start" name="start"><div class="input-group-prepend input-group-append"><div class="input-group-text">to</div></div><input type="text" class="input-sm form-control" id="snodas-range-query-end" name="end"></div>';
 var doy_html = 'Query Date<div id="snodas-doy-query"><div class="input-group input-daterange mb-3" id="snodas-doy-query-doy"><input type="text" class="input-sm form-control" id="snodas-doy-query-doy1" name="start"></div><select class="form-control" id="snodas-doy-query-years-start"></select>to<select class="form-control" id="snodas-doy-query-years-end"></select></div>';
 var variables_html = 'SNODAS Variable:<select class="form-control" id="snodas-query-variable"><option value="depth">Snow Depth</option><option value="swe" selected>Snow Water Equivalent</option><option value="runoff">Runoff</option><option value="sublimation">Sublimation</option><option value="sublimation_blowing">Sublimation (Blowing)</option><option value="precip_solid">Precipitation (Solid)</option><option value="precip_liquid">Precipitation (Liquid)</option><option value="average_temp">Average Temperature</option></select>';
@@ -244,9 +244,9 @@ function pp_table_init() {
     var x = document.getElementById("awdb-select");
     if (x.options.length == 0)
     {
-        awdbIdList.sort(function(x, y) {
-            const xPieces = x.split(":");
-            const yPieces = y.split(":");
+        featuresPropertiesList.sort(function(x, y) {
+            const xPieces = x.awdb_id.split(":");
+            const yPieces = y.awdb_id.split(":");
             var xTest = xPieces[1].concat(xPieces[0]);
             var yTest = yPieces[1].concat(yPieces[0]);
          if (xTest < yTest) {
@@ -258,10 +258,16 @@ function pp_table_init() {
          return 0;
       });
         var i = 0;
-        while (i < awdbIdList.length) {
-            var option = document.createElement("option");
-            option.text = awdbIdList[i];
-            x.add(option);
+        while (i < featuresPropertiesList.length) {
+            // Only add polygons to the select list
+            if (watersheds.hasFeature(featuresPropertiesList[i].pourpoint_id))
+            {
+                var option = document.createElement("option");
+                var oText = featuresPropertiesList[i].awdb_id.concat(":".concat(featuresPropertiesList[i].name));
+                option.value = featuresPropertiesList[i].pourpoint_id;
+                option.text = oText;
+                x.add(option);
+            }
             i++;
         }
     }
@@ -979,7 +985,7 @@ var pourpoints = L.geoJson(null, {
                     L.DomEvent.stop(e);
                 }
             });
-            awdbIdList.push(feature.properties.awdb_id);
+            featuresPropertiesList.push(feature.properties);
         }
     }
 });
