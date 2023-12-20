@@ -270,6 +270,7 @@ function pp_table_init() {
             }
             i++;
         }
+        x.addEventListener("change", selectMapLyr);
     }
     if (selected_properties) {
         setPourpointName(selected_properties);
@@ -438,6 +439,7 @@ function setPourpointName(properties) {
         table.setAttribute('is_polygon', properties.is_polygon);
         document.getElementById('snodas-pourpoint-awdb-id').innerText = properties.awdb_id;
         document.getElementById('snodas-pourpoint-name').innerText = properties.name;
+        document.getElementById('awdb-select').value = properties.pourpoint_id;
         try {
             query_selector.validate();
         } catch {}
@@ -452,6 +454,7 @@ function clearPourpointName() {
         table.removeAttribute('is_polygon');
         document.getElementById('snodas-pourpoint-awdb-id').innerText = '';
         document.getElementById('snodas-pourpoint-name').innerText = '';
+        document.getElementById("awdb-select").selectedIndex = 0;
         try {
             query_selector.validate();
         } catch {}
@@ -1201,4 +1204,15 @@ if (!L.Browser.touch) {
     .disableScrollPropagation(container);
 } else {
     L.DomEvent.disableClickPropagation(container);
+}
+
+function selectMapLyr()
+{
+    var x = document.getElementById("awdb-select");
+    if (x.value != null)
+    {
+        var lyr = pourpoints.getLayerByID(x.value);
+        lyr.fireEvent('click');
+    }
+
 }
