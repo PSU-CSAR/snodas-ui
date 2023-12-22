@@ -188,3 +188,7 @@ input[type="radio"], input[type="checkbox"] {
 .thead-inverse th {
   background-color: #4f4f4f;
 }
+
+th.pourpoint-table {
+  width:20%
+}
