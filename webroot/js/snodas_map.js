@@ -232,7 +232,7 @@ query_selector.onclick = function(event) {
     query_selector.select_query_by_element(event.target);
 }
 
-var awdb_select = '<tr><th scope="row" colSpan="2"><select name="awdb-select" id="awdb-select"></select></th></tr>'
+var awdb_select = '<tr><th>Search</th><td><input type="search" id="awdb-filter" autocomplete="off"></td></tr><tr><th scope="row" colSpan="2"><select name="awdb-select" id="awdb-select"></select></th></tr>'
 var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody>' + awdb_select + '<tr><th scope="row" class="pourpoint-table" >AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr></tbody></table>';
 var date_html = 'Query Date Range<div class="input-group input-daterange mb-3" id="snodas-range-query-date"><input type="text" class="input-sm form-control" id="snodas-range-query-start" name="start"><div class="input-group-prepend input-group-append"><div class="input-group-text">to</div></div><input type="text" class="input-sm form-control" id="snodas-range-query-end" name="end"></div>';
 var doy_html = 'Query Date<div id="snodas-doy-query"><div class="input-group input-daterange mb-3" id="snodas-doy-query-doy"><input type="text" class="input-sm form-control" id="snodas-doy-query-doy1" name="start"></div><select class="form-control" id="snodas-doy-query-years-start"></select>to<select class="form-control" id="snodas-doy-query-years-end"></select></div>';
@@ -257,20 +257,18 @@ function pp_table_init() {
          }
          return 0;
       });
-        var i = 0;
-        while (i < featuresPropertiesList.length) {
-            // Only add polygons to the select list
-            if (watersheds.hasFeature(featuresPropertiesList[i].pourpoint_id))
-            {
-                var option = document.createElement("option");
-                var oText = featuresPropertiesList[i].awdb_id.concat(":".concat(featuresPropertiesList[i].name));
-                option.value = featuresPropertiesList[i].pourpoint_id;
-                option.text = oText;
-                x.add(option);
-            }
-            i++;
-        }
-        x.addEventListener("change", selectMapLyr);
+      setOptions(featuresPropertiesList);
+      // Event listener to set the aoi on the map when it is selected from the list
+      x.addEventListener("change", selectMapLyr);
+      var filter = document.getElementById("awdb-filter");
+      // Event listener to implement filter for select list when data is typed into search box
+      filter.addEventListener('input', () => {
+	    var value = filter.value.trim().toLowerCase();
+	    var filteredOptions = (featuresPropertiesList).filter(f => {
+		  return value === '' || f.awdb_id.toLowerCase().includes(value) || f.name.toLowerCase().includes(value);
+	    });
+	    setOptions(filteredOptions);
+      },false);
     }
     if (selected_properties) {
         setPourpointName(selected_properties);
@@ -988,7 +986,11 @@ var pourpoints = L.geoJson(null, {
                     L.DomEvent.stop(e);
                 }
             });
-            featuresPropertiesList.push(feature.properties);
+            // Only add polygons to the select list
+            if (watersheds.hasFeature(feature.properties.pourpoint_id))
+            {
+                featuresPropertiesList.push(feature.properties);
+            }
         }
     }
 });
@@ -1215,4 +1217,14 @@ function selectMapLyr()
         lyr.fireEvent('click');
     }
 
+}
+
+function setOptions(opts) {
+	var select = document.getElementById("awdb-select");
+	//set values for drop down
+	var html = '';
+	opts.forEach(o => {
+		html += `<option value=${o.pourpoint_id}>${o.awdb_id.concat(":".concat(o.name))}</option>`;
+	});
+	select.innerHTML = html;
 }
