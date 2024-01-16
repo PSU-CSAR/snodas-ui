@@ -192,3 +192,10 @@ input[type="radio"], input[type="checkbox"] {
 th.pourpoint-table {
   width:20%
 }
+
+select#awdb-select {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
