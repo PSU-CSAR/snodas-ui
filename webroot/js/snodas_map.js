@@ -281,6 +281,7 @@ query_selector.add_query(
         date_range_init();
     },
     function() {
+        // validate
         var queryBtn = document.getElementById('snodas-query-btn');
         var pourpointTable = document.getElementById('snodas-pourpoint-table');
         var urlParams = {};
@@ -556,6 +557,16 @@ function date_range_init() {
         date_range_low = document.getElementById('snodas-range-query-start').value;
         date_range_high = document.getElementById('snodas-range-query-end').value;
         query_selector.validate();
+    });
+
+    // Add event handlers to date text boxes so validation occurs when date picker is not used
+    document.getElementById('snodas-range-query-start').addEventListener('change', function(event) {
+        //query_selector.validate();
+         $("#snodas-range-query-date").data("datepicker").pickers[0].setDate(document.getElementById('snodas-range-query-start').value);
+    });
+    document.getElementById('snodas-range-query-end').addEventListener('change', function(event) {
+        //query_selector.validate();
+        $("#snodas-range-query-date").data("datepicker").pickers[1].setDate(document.getElementById('snodas-range-query-end').value);
     });
 }
 
