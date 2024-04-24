@@ -245,8 +245,8 @@ function pp_table_init() {
     if (x.options.length == 0)
     {
         featuresPropertiesList.sort(function(x, y) {
-            const xPieces = x.awdb_id.split(":");
-            const yPieces = y.awdb_id.split(":");
+            const xPieces = x.station_triplet.split(":");
+            const yPieces = y.station_triplet.split(":");
             var xTest = xPieces[1].concat(xPieces[0]);
             var yTest = yPieces[1].concat(yPieces[0]);
          if (xTest < yTest) {
@@ -263,7 +263,7 @@ function pp_table_init() {
       filter.addEventListener('input', () => {
 	    var value = filter.value.trim().toLowerCase();
 	    var filteredOptions = (featuresPropertiesList).filter(f => {
-		  return value === '' || f.awdb_id.toLowerCase().includes(value) || f.name.toLowerCase().includes(value);
+		  return value === '' || f.station_triplet.toLowerCase().includes(value) || f.name.toLowerCase().includes(value);
 	    });
 	    setOptions(filteredOptions);
       },false);
@@ -289,9 +289,10 @@ query_selector.add_query(
         urlParams['startDate'] = fmtDate($('#snodas-range-query-date').data("datepicker").pickers[0].getDate());
         urlParams['endDate'] = fmtDate($('#snodas-range-query-date').data("datepicker").pickers[1].getDate());
         urlParams['pourpoint_id'] = pourpointTable.getAttribute('pourpoint_id');
+        is_polygon = pourpointTable.getAttribute('is_polygon') === 'true';
 
         var linkEnd = null;
-        if (urlParams.startDate && urlParams.endDate && urlParams.pourpoint_id) {
+        if (is_polygon && urlParams.startDate && urlParams.endDate && urlParams.pourpoint_id) {
             linkEnd = 'query/pourpoint/'
                 + 'polygon' + '/'
                 + urlParams.pourpoint_id + '/'
@@ -333,9 +334,10 @@ query_selector.add_query(
         urlParams['startyear'] = document.getElementById('snodas-doy-query-years-start').value;
         urlParams['endyear'] = document.getElementById('snodas-doy-query-years-end').value;
         urlParams['pourpoint_id'] = pourpointTable.getAttribute('pourpoint_id');
+        is_polygon = pourpointTable.getAttribute('is_polygon') === 'true';
 
         var linkEnd = null;
-        if (urlParams.day && urlParams.month && urlParams.startyear && urlParams.endyear && urlParams.pourpoint_id) {
+        if (is_polygon && urlParams.day && urlParams.month && urlParams.startyear && urlParams.endyear && urlParams.pourpoint_id) {
             linkEnd = 'query/pourpoint/'
                 + 'polygon' + '/'
                 + urlParams.pourpoint_id + '/'
@@ -977,16 +979,20 @@ var pourpoints = L.geoJson(null, {
                     // as the point queries are not yet supported
                     //properties['is_polygon'] = false;
                     properties['is_polygon'] = watersheds.hasFeature(
-                        feature.properties.pourpoint_id
+                        feature.id
                     );
-                    setPourpointName(properties);
+                    setPourpointName({
+                        ...properties,
+                        awdb_id: properties.station_triplet,
+                        pourpoint_id: feature.id,
+		    });
                     pourpoints.addClickedHighlight(layer);
-                    watersheds.addClickedSelectedHighlight(feature.properties.pourpoint_id);
+                    watersheds.addClickedSelectedHighlight(feature.id);
                     L.DomEvent.stop(e);
                 },
                 mouseover: function (e) {
                     pourpoints.addHighlight(layer);
-                    watersheds.addHighlight(feature.properties.pourpoint_id);
+                    watersheds.addHighlight(feature.id);
                     L.DomEvent.stop(e);
                 },
                 mouseout: function (e) {
@@ -996,9 +1002,9 @@ var pourpoints = L.geoJson(null, {
                 }
             });
             // Only add polygons to the select list
-            if (watersheds.hasFeature(feature.properties.pourpoint_id))
+            if (watersheds.hasFeature(feature.id))
             {
-                featuresPropertiesList.push(feature.properties);
+                featuresPropertiesList.push({ ...feature.properties, pourpoint_id: feature.id });
             }
         }
     }
@@ -1010,7 +1016,7 @@ pourpoints._clicked = null;
 pourpoints.getLayerByID = function(id) {
     var lyr;
     this.eachLayer(function(layer) {
-        if (layer.feature.properties.pourpoint_id == id) {
+        if (layer.feature.id == id) {
             lyr = layer;
             return;
         }
@@ -1091,9 +1097,9 @@ watersheds.on('click', function(e) {
     var properties = e.layer.properties;
     properties['is_polygon'] = true;
     setPourpointName(properties);
-    pourpoints.addClickedHighlight(pourpoints.getLayerByID(e.layer.properties.pourpoint_id));
+    pourpoints.addClickedHighlight(pourpoints.getLayerByID(properties.pourpoint_id));
     this.addClickedSelectedHighlight(properties.pourpoint_id);
-    this._clicked = e.layer.properties.pourpoint_id;
+    this._clicked = properties.pourpoint_id;
     L.DomEvent.stop(e);
 });
 
@@ -1233,7 +1239,7 @@ function setOptions(opts) {
     //set values for drop down
     var html = '';
     opts.forEach(o => {
-        html += `<option value=${o.pourpoint_id}>${o.awdb_id.concat(":".concat(o.name))}</option>`;
+        html += `<option value=${o.pourpoint_id}>${o.station_triplet.concat(":".concat(o.name))}</option>`;
     });
     select.innerHTML = html;
 }
