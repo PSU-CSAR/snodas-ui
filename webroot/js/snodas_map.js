@@ -317,6 +317,52 @@ query_selector.add_query(
 );
 
 query_selector.add_query(
+    'SNODAS Zonal Values - Date Range',
+    pp_table_html + date_html + elevation_html + submit,
+    function() {
+        pp_table_init();
+        date_range_init();
+    },
+    function() {
+        // validate
+        var queryBtn = document.getElementById('snodas-query-btn');
+        var pourpointTable = document.getElementById('snodas-pourpoint-table');
+        var elevBandSelect = document.getElementById('snodas-elevation-band-step-ft');
+        var urlParams = {};
+
+        urlParams['startDate'] = fmtDate($('#snodas-range-query-date').data("datepicker").pickers[0].getDate());
+        urlParams['endDate'] = fmtDate($('#snodas-range-query-date').data("datepicker").pickers[1].getDate());
+        urlParams['pourpoint_id'] = pourpointTable.getAttribute('pourpoint_id');
+        urlParams['elevation_band_step_ft'] = elevBandSelect.options[elevBandSelect.selectedIndex].value;
+        is_polygon = pourpointTable.getAttribute('is_polygon') === 'true';
+
+        var linkEnd = null;
+        if (is_polygon && urlParams.startDate && urlParams.endDate && urlParams.pourpoint_id && urlParams.elevation_band_step_ft) {
+            linkEnd = 'pourpoints/'
+                + urlParams.pourpoint_id + '/'
+                + 'zonal-stats/date-range?products=swe'
+                + '&start_date=' + urlParams.startDate
+                + '&end_date=' + urlParams.endDate
+                + '&elevation_band_step_ft=' + urlParams.elevation_band_step_ft
+                + formatCsv;
+        }
+
+        if (linkEnd) {
+            alert(linkEnd);
+            queryBtn.setAttribute('href', queryBtn.getAttribute('url') + linkEnd);
+            L.DomUtil.removeClass(queryBtn, 'disabled');
+            queryBtn.setAttribute('aria-disabled', false);
+            return true;
+        }
+
+        queryBtn.removeAttribute('href');
+        L.DomUtil.addClass(queryBtn, 'disabled');
+        queryBtn.setAttribute('aria-disabled', true);
+        return false;
+    },
+);
+
+query_selector.add_query(
     'SNODAS Values - Doy Range',
     pp_table_html + doy_html + submit,
     function() {
@@ -373,15 +419,17 @@ query_selector.add_query(
     function() {
         var queryBtn = document.getElementById('snodas-query-btn');
         var pourpointTable = document.getElementById('snodas-pourpoint-table');
+        var elevBandSelect = document.getElementById('snodas-elevation-band-step-ft');
         var urlParams = {};
 
+        alert("blah");
         doy = document.getElementById('snodas-doy-query-doy1').value.split(' ');
         urlParams['day'] = doy[0]
         urlParams['month'] = month_name_to_num(doy[1])
         urlParams['startyear'] = document.getElementById('snodas-doy-query-years-start').value;
         urlParams['endyear'] = document.getElementById('snodas-doy-query-years-end').value;
         urlParams['pourpoint_id'] = pourpointTable.getAttribute('pourpoint_id');        // validate
-        urlParams['elevation_band_step_ft'] = document.getElementById('snodas-elevation-band-step-ft').value;
+        urlParams['elevation_band_step_ft'] = elevBandSelect.options[elevBandSelect.selectedIndex].value;
         is_polygon = pourpointTable.getAttribute('is_polygon') === 'true';
 
         var linkEnd = null;
