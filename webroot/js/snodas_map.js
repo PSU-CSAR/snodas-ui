@@ -236,9 +236,11 @@ var awdb_select = '<tr><th>Search</th><td><input type="search" id="awdb-filter" 
 var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody>' + awdb_select + '<tr><th scope="row" class="pourpoint-table" >AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr></tbody></table>';
 var date_html = 'Query Date Range<div class="input-group input-daterange mb-3" id="snodas-range-query-date"><input type="text" class="input-sm form-control" id="snodas-range-query-start" name="start"><div class="input-group-prepend input-group-append"><div class="input-group-text">to</div></div><input type="text" class="input-sm form-control" id="snodas-range-query-end" name="end"></div>';
 var doy_html = 'Query Date<div id="snodas-doy-query"><div class="input-group input-daterange mb-3" id="snodas-doy-query-doy"><input type="text" class="input-sm form-control" id="snodas-doy-query-doy1" name="start"></div><select class="form-control" id="snodas-doy-query-years-start"></select>to<select class="form-control" id="snodas-doy-query-years-end"></select></div>';
+var elevation_html = 'Elevation interval (feet)<select class="form-control" id="snodas-elevation-band-step-ft"><option value="250">250</option><option value="500">500</option><option value="1000" selected>1000</option></select>';
 var variables_html = 'SNODAS Variable:<select class="form-control" id="snodas-query-variable"><option value="depth">Snow Depth</option><option value="swe" selected>Snow Water Equivalent</option><option value="runoff">Runoff</option><option value="sublimation">Sublimation</option><option value="sublimation_blowing">Sublimation (Blowing)</option><option value="precip_solid">Precipitation (Solid)</option><option value="precip_liquid">Precipitation (Liquid)</option><option value="average_temp">Average Temperature</option></select>';
 var regression = 'Forecast period:<select class="form-control" id="snodas-query-month-start"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4" selected>April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>to<select class="form-control" id="snodas-query-month-end"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7" selected>July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>';
 var submit = '<a url="https://api.snodas.geog.pdx.edu/" role="button" class="btn btn-success disabled" id="snodas-query-btn" aria-disabled="true">Submit Query</a>';
+var formatCsv = '&format=csv';
 
 function pp_table_init() {
     var x = document.getElementById("awdb-select");
@@ -344,6 +346,55 @@ query_selector.add_query(
                 + zfill(urlParams.month, 2) + '-' + zfill(urlParams.day, 2) + '/'
                 + urlParams.startyear + '/'
                 + urlParams.endyear + '/';
+        }
+
+        if (linkEnd) {
+            queryBtn.setAttribute('href', queryBtn.getAttribute('url') + linkEnd);
+            L.DomUtil.removeClass(queryBtn, 'disabled');
+            queryBtn.setAttribute('aria-disabled', false);
+            return true;
+        }
+
+        queryBtn.removeAttribute('href');
+        L.DomUtil.addClass(queryBtn, 'disabled');
+        queryBtn.setAttribute('aria-disabled', true);
+        return false;
+    },
+);
+
+query_selector.add_query(
+    'SNODAS Zonal Values - Doy Range',
+    pp_table_html + doy_html + elevation_html + submit,
+    function() {
+        // init
+        pp_table_init();
+        doy_init();
+    },
+    function() {
+        var queryBtn = document.getElementById('snodas-query-btn');
+        var pourpointTable = document.getElementById('snodas-pourpoint-table');
+        var urlParams = {};
+
+        doy = document.getElementById('snodas-doy-query-doy1').value.split(' ');
+        urlParams['day'] = doy[0]
+        urlParams['month'] = month_name_to_num(doy[1])
+        urlParams['startyear'] = document.getElementById('snodas-doy-query-years-start').value;
+        urlParams['endyear'] = document.getElementById('snodas-doy-query-years-end').value;
+        urlParams['pourpoint_id'] = pourpointTable.getAttribute('pourpoint_id');        // validate
+        urlParams['elevation_band_step_ft'] = document.getElementById('snodas-elevation-band-step-ft').value;
+        is_polygon = pourpointTable.getAttribute('is_polygon') === 'true';
+
+        var linkEnd = null;
+        if (is_polygon && urlParams.day && urlParams.month && urlParams.startyear && urlParams.endyear && urlParams.pourpoint_id && urlParams.elevation_band_step_ft) {
+            linkEnd = 'pourpoints/'
+                + urlParams.pourpoint_id + '/'
+                + 'zonal-stats/doy?products=swe'
+                + '&month=' + urlParams.month
+                + '&day=' + urlParams.day
+                + '&start_year=' + urlParams.startyear
+                + '&end_year=' + urlParams.endyear
+                + '&elevation_band_step_ft=' + urlParams.elevation_band_step_ft
+                + formatCsv;
         }
 
         if (linkEnd) {
