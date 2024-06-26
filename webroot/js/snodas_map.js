@@ -236,7 +236,7 @@ var awdb_select = '<tr><th>Search</th><td><input type="search" id="awdb-filter" 
 var pp_table_html = '<table class="table table-borderless mb-3 border" id="snodas-pourpoint-table"><tbody>' + awdb_select + '<tr><th scope="row" class="pourpoint-table" >AWDB ID</th><td id="snodas-pourpoint-awdb-id"></td></tr><tr><th scope="row">Name</th><td id="snodas-pourpoint-name"></td></tr></tbody></table>';
 var date_html = 'Query Date Range<div class="input-group input-daterange mb-3" id="snodas-range-query-date"><input type="text" class="input-sm form-control" id="snodas-range-query-start" name="start"><div class="input-group-prepend input-group-append"><div class="input-group-text">to</div></div><input type="text" class="input-sm form-control" id="snodas-range-query-end" name="end"></div>';
 var doy_html = 'Query Date<div id="snodas-doy-query"><div class="input-group input-daterange mb-3" id="snodas-doy-query-doy"><input type="text" class="input-sm form-control" id="snodas-doy-query-doy1" name="start"></div><select class="form-control" id="snodas-doy-query-years-start"></select>to<select class="form-control" id="snodas-doy-query-years-end"></select></div>';
-var elevation_html = 'Elevation interval (feet)<select class="form-control" id="snodas-elevation-band-step-ft"><option value="250">250</option><option value="500">500</option><option value="1000" selected>1000</option></select>';
+var elevation_html = 'Elevation interval (feet)<select class="form-control" id="snodas-elevation-band-step-ft"></select>';
 var variables_html = 'SNODAS Variable:<select class="form-control" id="snodas-query-variable"><option value="depth">Snow Depth</option><option value="swe" selected>Snow Water Equivalent</option><option value="runoff">Runoff</option><option value="sublimation">Sublimation</option><option value="sublimation_blowing">Sublimation (Blowing)</option><option value="precip_solid">Precipitation (Solid)</option><option value="precip_liquid">Precipitation (Liquid)</option><option value="average_temp">Average Temperature</option></select>';
 var regression = 'Forecast period:<select class="form-control" id="snodas-query-month-start"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4" selected>April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>to<select class="form-control" id="snodas-query-month-end"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7" selected>July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>';
 var submit = '<a url="https://api.snodas.geog.pdx.edu/" role="button" class="btn btn-success disabled" id="snodas-query-btn" aria-disabled="true">Submit Query</a>';
@@ -322,6 +322,7 @@ query_selector.add_query(
     function() {
         pp_table_init();
         date_range_init();
+        elevBand_init();
     },
     function() {
         // validate
@@ -348,7 +349,6 @@ query_selector.add_query(
         }
 
         if (linkEnd) {
-            alert(linkEnd);
             queryBtn.setAttribute('href', queryBtn.getAttribute('url') + linkEnd);
             L.DomUtil.removeClass(queryBtn, 'disabled');
             queryBtn.setAttribute('aria-disabled', false);
@@ -415,6 +415,7 @@ query_selector.add_query(
         // init
         pp_table_init();
         doy_init();
+        elevBand_init();
     },
     function() {
         var queryBtn = document.getElementById('snodas-query-btn');
@@ -422,7 +423,6 @@ query_selector.add_query(
         var elevBandSelect = document.getElementById('snodas-elevation-band-step-ft');
         var urlParams = {};
 
-        alert("blah");
         doy = document.getElementById('snodas-doy-query-doy1').value.split(' ');
         urlParams['day'] = doy[0]
         urlParams['month'] = month_name_to_num(doy[1])
@@ -736,8 +736,24 @@ function doy_init() {
 }
 
 $("#calendar-btn").click(function() {
-    $('#snodas-tile-date input').datepicker('show');
+    $('#snodas-tile-date input').datepicker('show');  
 });
+
+function elevBand_init() {
+    var elevBandSelect = document.getElementById('snodas-elevation-band-step-ft');
+    const arrIntervals = ["250", "500", "1000"];
+    for (let i = 0; i < arrIntervals.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = arrIntervals[i];
+        opt.innerHTML = arrIntervals[i];
+        elevBandSelect.appendChild(opt);
+    }
+    elevBandSelect.value = arrIntervals[2];
+
+    elevBandSelect.addEventListener('change', function(event) {
+        query_selector.validate();
+    });
+}
 
 //
 function sizeLayerControl() {
