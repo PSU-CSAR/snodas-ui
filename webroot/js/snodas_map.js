@@ -295,11 +295,12 @@ query_selector.add_query(
 
         var linkEnd = null;
         if (is_polygon && urlParams.startDate && urlParams.endDate && urlParams.pourpoint_id) {
-            linkEnd = 'query/pourpoint/'
-                + 'polygon' + '/'
+            linkEnd = 'pourpoints/'
                 + urlParams.pourpoint_id + '/'
-                + urlParams.startDate + '/'
-                + urlParams.endDate + '/';
+                + 'stats/date-range?'
+                + 'start_date=' + urlParams.startDate
+                + '&end_date=' + urlParams.endDate
+                + formatCsv;
         }
 
         if (linkEnd) {
@@ -386,12 +387,14 @@ query_selector.add_query(
 
         var linkEnd = null;
         if (is_polygon && urlParams.day && urlParams.month && urlParams.startyear && urlParams.endyear && urlParams.pourpoint_id) {
-            linkEnd = 'query/pourpoint/'
-                + 'polygon' + '/'
+            linkEnd = 'pourpoints/'
                 + urlParams.pourpoint_id + '/'
-                + zfill(urlParams.month, 2) + '-' + zfill(urlParams.day, 2) + '/'
-                + urlParams.startyear + '/'
-                + urlParams.endyear + '/';
+                + 'stats/doy?'
+                + '&month=' + urlParams.month
+                + '&day=' + urlParams.day
+                + '&start_year=' + urlParams.startyear
+                + '&end_year=' + urlParams.endyear
+                + formatCsv;
         }
 
         if (linkEnd) {
