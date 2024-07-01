@@ -318,7 +318,7 @@ query_selector.add_query(
 );
 
 query_selector.add_query(
-    'SNODAS Zonal Values - Date Range',
+    'SNODAS Elev-Zonal SWE - Date Range',
     pp_table_html + date_html + elevation_html + submit,
     function() {
         pp_table_init();
@@ -412,7 +412,7 @@ query_selector.add_query(
 );
 
 query_selector.add_query(
-    'SNODAS Zonal Values - Doy Range',
+    'SNODAS Elev-Zonal SWE - Doy Range',
     pp_table_html + doy_html + elevation_html + submit,
     function() {
         // init
